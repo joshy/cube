@@ -4,7 +4,26 @@ import 'dart:async';
 
 void main() {
   CanvasElement canvas = querySelector("#canvas");
-  scheduleMicrotask(new Cube(canvas).start());
+  InputElement fov = querySelector("#fov");
+  Cube c = new Cube(canvas, fov.valueAsNumber, 1);
+  Cube d = new Cube(canvas, 500, 2);
+  //scheduleMicrotask(c.start);
+  scheduleMicrotask(d.start);
+}
+
+class Space {
+  
+  List<Cube> cubes;
+  
+  num numberOfCubes;
+  
+  
+  Space(this.numberOfCubes) {
+    for (var i=0; i<numberOfCubes; i++) {
+      //cubes.add(new Cube(canvas, fov, location))
+    }
+  }
+  
 }
 
 class Cube {
@@ -12,6 +31,8 @@ class Cube {
   CanvasElement canvas;
   CanvasRenderingContext2D ctx;
   Rectangle view;
+  num fov;
+  num location;
   
   var vertices = [new Point3D(-1, 1, -1),
                   new Point3D(1, 1, -1),
@@ -39,9 +60,8 @@ class Cube {
 
   num angle = 0.0;
 
-  Cube(this.canvas) {
-    this.ctx = canvas.getContext("2d");
-    view = this.canvas.client;
+  Cube(this.canvas, this.fov, this.location) {
+    this.view = canvas.client;
   }
   
   start() {
@@ -49,8 +69,9 @@ class Cube {
   }
   
   void draw(num _) {
-    drawBackground(ctx);
-    loop(ctx);
+    var context = canvas.context2D;
+    drawBackground(context);
+    loop(context);
     requestRedraw();
   }
 
@@ -64,18 +85,20 @@ class Cube {
   
   String arrayToRgb(arr) {
     if (arr.length == 3) {
-      return "rgb(" + arr[0].toString() + "," + arr[1].toString() + "," + arr[2].toString() + ")";
+      return 'rgb(${arr[0].toString()}, ${arr[1].toString()} , ${arr[2].toString()})';
     }
     return "rgb(0,0,0)";
   }
   
   void loop(CanvasRenderingContext2D ctx) {
+    InputElement fov = querySelector("#fov");
+    InputElement viewDistance = querySelector("#view-distance");
     var t = new List(vertices.length);
   
     for (var i=0; i < vertices.length; i++) {
       Point3D v = vertices[i];
       Point3D r = v.rotateX(angle).rotateY(angle).rotateZ(angle);
-      var p = r.project(view.width, view.height, 200, 4);
+      var p = r.project(view.width/location, view.height/location, fov.valueAsNumber, viewDistance.valueAsNumber);
       t[i] = p;
     }
   
@@ -118,7 +141,6 @@ class Point3D {
     _z = this.y * sina + this.z * cosa;
     return new Point3D(this.x, _y, _z);
   }
- 
  
   Point3D rotateY(angle) {
     num rad, cosa, sina, _x, _z;
